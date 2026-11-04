@@ -8,21 +8,30 @@
  *     ->  extensions/dsh/skills.generated.json manifest
  *
  * The only difference between an upstream markdown file and its shipped copy is
- * what the machine-readable rule table in harness/dsh.md says, plus one pointer
- * line under the H1 of a SKILL.md that still carries a mapped name. Everything
- * else is copied byte for byte, so `--check` and tools/check-adaptation.mjs can
- * prove the mirror never invents prose.
+ * what the machine-readable rule table in harness/dsh.md says — executed by
+ * tools/rules.mjs, which tools/check-adaptation.mjs imports as well — plus one
+ * pointer line under the H1 of a SKILL.md that still carries a mapped name.
+ * Everything else is copied byte for byte, so `--check` and the guard can prove
+ * the mirror never invents prose.
  *
  * Deterministic and idempotent: same vendor in, byte-identical tree out.
  * Run with --check to report drift instead of writing.
+ *
+ * Failure policy: every check runs *before* the first byte is written. A missing
+ * source tree, an unreadable rule table, an unexpected skill count, or a
+ * package.json that cannot be versioned exits non-zero and leaves the existing
+ * tree untouched — a half-written mirror is worse than none, because the next
+ * run would treat the wreckage as its baseline.
  */
-
 import { createHash } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { EXPECTED_SKILLS, skillCountHint } from "./expected.mjs";
+import { adaptMarkdown, readAdapterRules } from "./rules.mjs";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const SELF = fileURLToPath(import.meta.url);
+const ROOT = join(dirname(SELF), "..");
 const VENDOR = join(ROOT, "vendor", "pstack");
 const SOURCES = [
   ["skills", join(VENDOR, "skills"), join(ROOT, "skills")],
@@ -32,34 +41,16 @@ const ADAPTER = join(ROOT, "harness", "dsh.md");
 const MANIFEST = join(ROOT, "extensions", "dsh", "skills.generated.json");
 const PACKAGE = join(ROOT, "package.json");
 const CHECK = process.argv.includes("--check");
-const MARK_START = "<!-- adapt-rules:start -->";
-const MARK_END = "<!-- adapt-rules:end -->";
+const ALLOW_NESTED = process.argv.includes("--allow-nested");
 
-function fail(message) {
-  console.error(`FAIL ${message}`);
-  process.exitCode = 1;
-}
+const problems = [];
+const notes = [];
+const fail = (message) => problems.push(message);
 
-function sha256(bytes) {
-  return createHash("sha256").update(bytes).digest("hex");
-}
-
-/** The rule table lives in harness/dsh.md so the mapping a human reads and the
- *  rewrite a machine runs cannot drift apart. */
-function readRules() {
-  const markdown = readFileSync(ADAPTER, "utf8");
-  const start = markdown.indexOf(MARK_START);
-  const end = markdown.indexOf(MARK_END);
-  if (start < 0 || end < 0 || end < start) {
-    fail(`${relative(ROOT, ADAPTER)} has no machine-readable rule block`);
-    return undefined;
-  }
-  const fenced = markdown.slice(start + MARK_START.length, end);
-  const json = fenced.replace(/^[\s\S]*?```json\r?\n/, "").replace(/```[\s\S]*$/, "");
-  return JSON.parse(json);
-}
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 function walk(dir) {
+  if (!existsSync(dir)) return [];
   return readdirSync(dir)
     .sort()
     .flatMap((name) => {
@@ -69,60 +60,78 @@ function walk(dir) {
     });
 }
 
-function rewrite(text, rules, tally) {
-  let out = text;
-  for (const rule of rules) {
-    const before = out;
-    if (rule.exact) out = out.split(rule.find).join(rule.replace);
-    else out = out.replace(new RegExp(rule.find, rule.flags ?? "g"), rule.replace);
-    if (out !== before) tally.set(rule.id, (tally.get(rule.id) ?? 0) + 1);
+function walkDirs(dir, acc = []) {
+  if (!existsSync(dir)) return acc;
+  for (const name of readdirSync(dir).sort()) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      acc.push(path);
+      walkDirs(path, acc);
+    }
   }
-  return out;
+  return acc;
 }
 
-/** Upstream wraps each SKILL.md that names Cursor constructs by pointing at an
- *  adapter doc; the pointer is the whole reason a body can stay upstream's. */
-function withPointer(text, pointer, matched) {
-  if (!matched) return text;
-  if (text.includes(pointer)) return text;
-  return text.replace(/^(# .*)\n+/m, `$1\n\n${pointer}\n\n`);
+/**
+ * Running this inside an installed copy would delete the payload it is standing
+ * on: `skills/` and `agents/` under node_modules are the package's shipped tree,
+ * and the prune step would treat vendor/ as the only truth. Refuse by default.
+ */
+if (/[\\/]node_modules[\\/]/.test(SELF)) {
+  if (ALLOW_NESTED) {
+    notes.push("regenerating inside node_modules because --allow-nested was passed");
+  } else if (CHECK) {
+    notes.push("inside node_modules, --check mode only (read-only; nothing is written)");
+  } else {
+    fail("refusing to regenerate inside node_modules: this would rewrite the installed package. Pass --allow-nested if that is really intended.");
+  }
 }
 
-function build(rules) {
+let rules;
+try {
+  rules = readAdapterRules(ADAPTER);
+} catch (err) {
+  fail(`${relative(ROOT, ADAPTER)}: ${err.message}`);
+}
+
+for (const [label, sourceDir] of SOURCES) {
+  if (!existsSync(sourceDir)) fail(`missing upstream source vendor/pstack/${label}/ — upstream layout changed`);
+}
+if (!existsSync(join(VENDOR, "plugin.json"))) fail("missing vendor/pstack/plugin.json — upstream layout changed");
+
+/** Reads and transforms everything in memory. Nothing touches the disk here. */
+function build() {
   const tally = new Map();
-  const normalised = new Set();
+  const normalisedFiles = [];
   const files = new Map();
-  for (const [, sourceDir, outDir] of SOURCES) {
-    if (!existsSync(sourceDir)) {
-      fail(`missing upstream source ${relative(ROOT, sourceDir)}`);
-      continue;
-    }
+  let pointerFiles = 0;
+  for (const [label, sourceDir, outDir] of SOURCES) {
+    if (!existsSync(sourceDir)) continue;
     for (const path of walk(sourceDir)) {
-      const rel = relative(sourceDir, path);
+      const rel = relative(sourceDir, path).replace(/\\/g, "/");
+      const relFromRoot = `${label}/${rel}`;
       const bytes = readFileSync(path);
-      const isSkillFile = rel.endsWith("SKILL.md");
-      let out = bytes;
-      if (rel.endsWith(".md")) {
-        // Canonicalise line endings so a Windows checkout and the Linux runner
-        // produce identical bytes. Upstream is LF; tools/check-adaptation.mjs
-        // fails loudly if that ever stops being true.
-        const raw = bytes.toString("utf8");
-        const text = raw.replace(/\r\n/g, "\n");
-        if (text !== raw) normalised.add(rel);
-        const matched = new RegExp(rules.pointerWhen).test(text);
-        out = Buffer.from(withPointer(rewrite(text, rules.rules, tally), rules.pointer, matched && isSkillFile));
+      if (!rel.endsWith(".md")) {
+        files.set(join(outDir, rel), bytes);
+        continue;
       }
-      files.set(join(outDir, rel), out);
+      const { text, normalised, pointerAdded } = adaptMarkdown(
+        bytes.toString("utf8"),
+        rules,
+        relFromRoot,
+        rel.endsWith("SKILL.md"),
+        tally,
+      );
+      if (normalised) normalisedFiles.push(rel);
+      if (pointerAdded) pointerFiles++;
+      files.set(join(outDir, rel), Buffer.from(text));
     }
   }
-  return { files, tally, normalised };
+  return { files, tally, normalisedFiles, pointerFiles };
 }
 
-function manifestFor(files, rules) {
+function manifestFor(files) {
   const skillsRoot = join(ROOT, "skills");
-  const entries = [...files.entries()]
-    .filter(([path]) => dirname(path) === skillsRoot || path.startsWith(`${skillsRoot}/`))
-    .map(([path]) => path);
   const names = readdirSync(join(VENDOR, "skills"))
     .filter((name) => existsSync(join(VENDOR, "skills", name, "SKILL.md")))
     .sort();
@@ -150,7 +159,7 @@ function manifestFor(files, rules) {
   };
 }
 
-function syncPackageVersion(version) {
+function packageTextFor(version) {
   const text = readFileSync(PACKAGE, "utf8");
   const pattern = /("version":\s*")([^"]+)(")/g;
   const found = [...text.matchAll(pattern)];
@@ -161,32 +170,8 @@ function syncPackageVersion(version) {
   return text.replace(pattern, `$1${version}$3`);
 }
 
-const rules = readRules();
-if (!rules) process.exit(1);
-if (!existsSync(join(VENDOR, "plugin.json"))) {
-  fail("missing vendor/pstack/plugin.json");
-  process.exit(1);
-}
-
-const { files, tally, normalised } = build(rules);
-const manifest = manifestFor(files, rules);
-const packageText = syncPackageVersion(manifest.upstreamVersion);
-
-if (CHECK) {
-  const drifted = [...files.entries()].filter(
-    ([path, bytes]) => !existsSync(path) || !readFileSync(path).equals(bytes),
-  );
-  const manifestDrift = !existsSync(MANIFEST) || !readFileSync(MANIFEST, "utf8").includes(`"upstreamDigest": "${manifest.upstreamDigest}"`);
-  for (const [path] of drifted.slice(0, 20)) console.log(relative(ROOT, path));
-  if (drifted.length > 0 || manifestDrift) {
-    console.log(`pstack-dsh is out of date. Run \`node tools/adapt.mjs\` and commit the result.`);
-    process.exit(1);
-  }
-  console.log(`pstack-dsh is up to date (${manifest.skillCount} skills, ${files.size} files).`);
-} else {
-  for (const outDir of [join(ROOT, "skills"), join(ROOT, "agents")]) {
-    rmSync(outDir, { recursive: true, force: true });
-  }
+/** Writes only after every check passed, then prunes what upstream dropped. */
+function writeTree(files, manifest, packageText) {
   for (const [path, bytes] of files) {
     mkdirSync(dirname(path), { recursive: true });
     // Fixed mode: the mirror must not churn the executable bit between a
@@ -194,18 +179,69 @@ if (CHECK) {
     writeFileSync(path, bytes, { mode: 0o644 });
     chmodSync(path, 0o644);
   }
+  const expected = new Set(files.keys());
+  for (const outDir of [join(ROOT, "skills"), join(ROOT, "agents")]) {
+    for (const path of walk(outDir)) if (!expected.has(path)) rmSync(path, { force: true });
+    // Deepest first, so a directory emptied by the prune above also goes away.
+    for (const dir of walkDirs(outDir).reverse()) {
+      try {
+        if (readdirSync(dir).length === 0) rmdirSync(dir);
+      } catch {
+        /* not worth failing the run over */
+      }
+    }
+  }
   mkdirSync(dirname(MANIFEST), { recursive: true });
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
   if (packageText !== undefined) writeFileSync(PACKAGE, packageText);
-  const silent = rules.rules.filter((rule) => !tally.has(rule.id));
+}
+
+function stop() {
+  for (const problem of problems) console.error(`FAIL ${problem}`);
+  console.error("nothing was written; fix the above and re-run");
+  process.exit(1);
+}
+
+if (problems.length > 0 || !rules) stop();
+
+const { files, tally, normalisedFiles, pointerFiles } = build();
+
+const vendorSkillCount = readdirSync(join(VENDOR, "skills")).filter((name) =>
+  existsSync(join(VENDOR, "skills", name, "SKILL.md")),
+).length;
+if (vendorSkillCount !== EXPECTED_SKILLS) fail(skillCountHint(vendorSkillCount));
+if (problems.length > 0) stop();
+
+const manifest = manifestFor(files);
+const packageText = packageTextFor(manifest.upstreamVersion);
+if (problems.length > 0 || packageText === undefined) stop();
+
+if (CHECK) {
+  const drifted = [...files.entries()]
+    .filter(([path, bytes]) => !existsSync(path) || !readFileSync(path).equals(bytes))
+    .map(([path]) => relative(ROOT, path));
+  const manifestDrift =
+    !existsSync(MANIFEST) || !readFileSync(MANIFEST, "utf8").includes(`"upstreamDigest": "${manifest.upstreamDigest}"`);
+  for (const path of drifted.slice(0, 20)) console.log(path);
+  if (drifted.length > 0 || manifestDrift) {
+    console.log("pstack-dsh is out of date. Run `node tools/adapt.mjs` and commit the result.");
+    process.exit(1);
+  }
+  console.log(`pstack-dsh is up to date (${manifest.skillCount} skills, ${files.size} files).`);
+} else {
+  writeTree(files, manifest, packageText);
   const rewrites = [...tally.values()].reduce((sum, count) => sum + count, 0);
   console.log(
-    `${manifest.skillCount} skills, ${files.size} files, ${rewrites} rewrites across ${tally.size} rules, upstream ${manifest.upstreamVersion}.`,
+    `${manifest.skillCount} skills, ${files.size} files, ${rewrites} rewrites across ${tally.size} rules, ` +
+      `${pointerFiles} pointer lines under lineEndings "${rules.lineEndings}", upstream ${manifest.upstreamVersion}.`,
   );
+  const silent = rules.rules.filter((rule) => !tally.has(rule.id));
   if (silent.length > 0) {
     console.log(`note: ${silent.length} rule(s) matched nothing upstream: ${silent.map((rule) => rule.id).join(", ")}`);
   }
-  if (normalised.size > 0) {
-    console.log(`note: normalised CRLF to LF in ${normalised.size} upstream file(s)`);
+  if (normalisedFiles.length > 0) {
+    console.log(`note: applied lineEndings "${rules.lineEndings}" to ${normalisedFiles.length} upstream file(s)`);
   }
 }
+
+for (const note of notes) console.log(`NOTE ${note}`);

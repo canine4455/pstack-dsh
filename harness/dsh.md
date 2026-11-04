@@ -96,13 +96,31 @@ means "the parent chat's model" — omit the override.
 
 `tools/adapt.mjs` executes this block and `tools/check-adaptation.mjs` proves its
 coverage, so the mapping a human reads here and the rewrite a machine runs cannot
-drift apart.
+drift apart. Both import the same engine (`tools/rules.mjs`); neither re-implements
+the table.
+
+Three keys above `rules` describe the table itself:
+
+- `pointerWhen` decides which markdown files get the pointer line, and `pointer`
+  is that line with one token in it: `%ADAPTER%`. Each tool substitutes the href
+  computed from the file's own depth, so a SKILL.md that moves up or down one
+  directory still points at this file instead of at a path that happens to work
+  today.
+- `lineEndings` is the only byte-level rewrite outside `rules`. `crlf-to-lf` means
+  a CRLF checkout of upstream is normalised to LF before the rules run, and the
+  guard applies the same policy instead of failing on upstream CRLF — the two now
+  agree on what a legal byte difference is. Upstream is LF today, so this is a
+  no-op; it is declared so that a CRLF upstream can never be normalised silently.
+- `rules` is line-local by construction: no `find` contains a newline, which is
+  what lets the guard prove "differences only on lines the table matches" line by
+  line. The guard asserts that property of the table itself.
 
 <!-- adapt-rules:start -->
 ```json
 {
   "pointerWhen": "`Task`|\\bTask (tool|subagent|call|spawn|error)|subagent_type|environment: \"(cloud|local)\"|run_in_background|readonly: (true|false)|cloud_base_branch|/deslop|create-skill|cursor-team-kit|\\.cursor|agent-transcripts|AskQuestion|pstack-models\\.mdc|`/[a-z]",
-  "pointer": "In DeepSeek Harness, read [the DSH adapter](../../harness/dsh.md) once before following this step. It maps every Cursor name below to DSH, and says which fields to drop.",
+  "pointer": "In DeepSeek Harness, read [the DSH adapter](%ADAPTER%) once before following this step. It maps every Cursor name below to DSH, and says which fields to drop.",
+  "lineEndings": "crlf-to-lf",
   "rules": [
     { "id": "params-how-spawn", "exact": true, "find": "Every spawn is a Task subagent with `subagent_type: generalPurpose` and `readonly: true`.", "replace": "Every spawn is a `subagent`." },
     { "id": "params-why-spawn", "exact": true, "find": "Every spawn is `generalPurpose` with `readonly: false` (agent mode).", "replace": "Every spawn is a `subagent` in agent mode." },
