@@ -4,7 +4,10 @@ Acceptance record for `https://github.com/canine4455/pstack-dsh`.
 Every line below was produced by the command shown, in this order, on
 2026-11-04 (Asia/Taipei). Nothing here is a projection.
 
-Repo HEAD at time of writing: `bd3a7882a11e74eb15fec4d6d6d334167453dc27`.
+Repo HEAD at last verification: `897cd4509a4a562f2f09368c365af612eaa36710`.
+The generated tree was last changed in `bd3a788`; everything after that is
+documentation, and the final sync run (41848213335, on `897cd45`) confirmed it
+produces zero commits. Only this file changed after that run.
 
 | id | criterion | verdict |
 | --- | --- | --- |
