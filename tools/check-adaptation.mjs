@@ -207,7 +207,7 @@ const manifestDrift = (() => {
   let prior;
   try {
     prior = JSON.parse(
-      execFileSync("git", ["show", `HEAD:${relative(ROOT, MANIFEST)}`], {
+      execFileSync("git", ["show", `HEAD:${relative(ROOT, MANIFEST).replace(/\\/g, "/")}`], {
         cwd: ROOT,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "ignore"],
