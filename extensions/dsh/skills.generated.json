@@ -3,7 +3,7 @@
   "adapter": "harness/dsh.md",
   "note": "Generated. Do not edit skills/ or agents/ by hand; run tools/adapt.mjs.",
   "upstreamVersion": "0.15.36",
-  "upstreamDigest": "2cc0b8c829defd9a70d0a18b8dcf22128e86aa4c9765117f37a2f9b793a2cf7f",
+  "upstreamDigest": "e728cbd35957b38289f3303f45647668d190e29c7a59f92a6d34766cfa566804",
   "skillCount": 58,
   "skills": [
     {
