@@ -424,24 +424,83 @@ open — it is not covered by anything above.
 
 ## A9 — post-push install smoke
 
-See the run recorded in the last commit of this repository (`git log -1`): a fresh
-`git clone --depth 1`, `pnpm add "github:canine4455/pstack-dsh"`, then
+The tree these commits publish installs and verifies from the remote. Pushed HEAD:
 
 ```
+6c5548a81b2cc89767cc150063fb403aae15bc6d
+```
+
+(three commits on top of `9c480ca`.) A fresh shallow clone of `main` passes its own
+checks with no local state involved:
+
+```
+$ git clone --depth 1 https://github.com/canine4455/pstack-dsh.git src
+$ cd src && git rev-parse HEAD
+6c5548a81b2cc89767cc150063fb403aae15bc6d
+$ node tools/adapt.mjs --check
+pstack-dsh is up to date (58 skills, 537 files).
+$ node tools/check-adaptation.mjs | tail -2
+adaptation guard passed: 58 skills, 66 rules, 0 forbidden constructs, 0 real local paths, 0 credential shapes.
+adapter: harness/dsh.md
+```
+
+A clean consumer project installs it from the remote, and pnpm fetches exactly the
+pushed commit (the codeload URL carries `6c5548a…`):
+
+```
+$ cd ../consumer && pnpm init -y && pnpm add "github:canine4455/pstack-dsh"
+Agent skills awaiting approval: pstack-dsh@https://codeload.github.com/canine4455/pstack-dsh/tar.gz/6c5548a81b2cc89767cc150063fb403aae15bc6d.
++ pstack-dsh 0.15.36
+Done in 1m 25.9s using pnpm v12.16.1
 $ node node_modules/pstack-dsh/tools/verify-install.mjs --strict
 …
-verify-install: 14 passed, 1 skipped, 0 failed
+PASS  no skill name collides with a host skill root (7 root(s), 78 host skills, 9 root(s) absent)
+verify-install: 13 passed, 1 skipped, 0 failed
 strict: every skip is on the whitelist ["peer-import"]
-$ node tools/check-name-conflicts.mjs
-…
-host skills seen: 0
+$ node node_modules/pstack-dsh/tools/check-name-conflicts.mjs | tail -2
+host skills seen: 78
 name conflicts: 0
-NOTE no host skill roots exist on this machine; the scan proved nothing here (expected on CI, not in a profile)
 ```
 
-and a byte comparison of the installed copy against that tag's tree, so "what the
-remote installs" and "what the repository says" are the same bytes, not two
-independently generated trees.
+13 rather than 14 because in a consumer project the package resolves by name, so the
+"package under test is identified" check — which exists for a source checkout — does
+not run here. One fewer PASS, same zero failures.
+
+Byte comparison, so "what the remote installs" is what the repository says rather
+than a second independently generated tree:
+
+```
+$ diff -r -x .git -x .gitignore -x .DS_Store <clone> <installed>
+0                       # no output, exit 0
+$ node …compare every file…
+cloned_files=1128 installed_files=1128 only_in_clone=0 only_in_installed=0 common_differing=0
+```
+
+The only files that exist in the clone and not in the package are `.git` and
+`.gitignore` (packaging convention, as in A2).
+
+CI on that push — the new `check.yml`, run 41858541232, `conclusion=success`:
+
+```
+$ gh api 'repos/…/actions/runs?per_page=10' --jq '.workflow_runs[] | …'
+1   check           push   6c5548a8  success   2026-11-04T15:30:58Z
+$ gh run view 41858541232 --log
+Generated tree is up to date   pstack-dsh is up to date (58 skills, 537 files).
+Adaptation guard              adaptation guard passed: 58 skills, 66 rules, 0 forbidden constructs, 0 real local paths, 0 credential shapes.
+Install verifier (strict)     verify-install: 14 passed, 1 skipped, 0 failed
+                              strict: every skip is on the whitelist ["peer-import"]
+Skill-name conflicts          SKIP /home/runner/.dsh/skills: directory does not exist
+                              name conflicts: 0
+```
+
+The two deliberately different numbers are the point: CI has no `~/.dsh` and runs
+from a source checkout (`14 passed, 1 skipped`, and every conflict root SKIPped **with
+a printed reason**); the consumer install has a name-resolved package and a real
+profile to compare against (`13 passed, 1 skipped`, `78 host skills`). Neither is
+silent.
+
+The push did **not** start a sync run: `sync-upstream` still triggers only on
+`schedule` and `workflow_dispatch`, so the network-touching surface is unchanged.
 
 ## Where fact diverged from the brief
 

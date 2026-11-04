@@ -51,6 +51,9 @@ const TREES = ["skills", "agents"];
 const PLACEHOLDER_SEGMENTS = new Set([
   "<name>", "<user>", "<profile>", "<you>", "%username%", "%user%", "${user}", "$user",
   "{name}", "{user}", "you", "your-name", "yourname", "me", "example", "user", "username",
+  // GitHub-hosted runners have a non-personal home at `/home/runner`; treating it
+  // as an operator's account would force this repo to censor its own CI logs.
+  "runner",
 ]);
 
 /** Real-absolute-path shapes. Bracket-free so a quoted command cannot self-match. */
