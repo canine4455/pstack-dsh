@@ -29,6 +29,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Content is the contract. Executable bits are not: a Windows checkout of
+      # this repo has none while the runner's clone of upstream does, so git
+      # would see a mode-only change on every single run.
+      - name: Ignore file mode changes
+        run: git config core.fileMode false
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"

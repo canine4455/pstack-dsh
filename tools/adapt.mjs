@@ -18,7 +18,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -85,7 +85,7 @@ function rewrite(text, rules, tally) {
 function withPointer(text, pointer, matched) {
   if (!matched) return text;
   if (text.includes(pointer)) return text;
-  return text.replace(/^(# .*)\n+/, `$1\n\n${pointer}\n\n`);
+  return text.replace(/^(# .*)\n+/m, `$1\n\n${pointer}\n\n`);
 }
 
 function build(rules) {
@@ -129,7 +129,9 @@ function manifestFor(files, rules) {
   const vendorDigest = sha256(
     Buffer.from(
       walk(VENDOR)
-        .map((path) => `${relative(VENDOR, path)}:${sha256(readFileSync(path))}`)
+        // POSIX separators on every platform, or the digest differs between a
+        // Windows checkout and the Linux runner for identical content.
+        .map((path) => `${relative(VENDOR, path).replace(/\\/g, "/")}:${sha256(readFileSync(path))}`)
         .join("\n"),
     ),
   );
@@ -187,7 +189,10 @@ if (CHECK) {
   }
   for (const [path, bytes] of files) {
     mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, bytes);
+    // Fixed mode: the mirror must not churn the executable bit between a
+    // Windows checkout, which has none, and the Linux runner, which does.
+    writeFileSync(path, bytes, { mode: 0o644 });
+    chmodSync(path, 0o644);
   }
   mkdirSync(dirname(MANIFEST), { recursive: true });
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);

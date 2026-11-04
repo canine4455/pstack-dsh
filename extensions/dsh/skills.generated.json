@@ -8,15 +8,15 @@
   "skills": [
     {
       "name": "architect",
-      "sha256": "9839cc55eb96c3f059933e71c04da48e125989541619e07d6c349d4689ef57ba"
+      "sha256": "dc5939eddb8730229e7f14d43727e3944d3978eb5019960881b67a686e1c48dd"
     },
     {
       "name": "arena",
-      "sha256": "5cf6fa95c3faecfa3f949cb84884bc2b78d9b0f1b4a625359bcc7cb1d1ec28b2"
+      "sha256": "82f83b6332f0471599598a349217c81874669f71c9be6b9f8a1e54d4a5e59740"
     },
     {
       "name": "automate-me",
-      "sha256": "2382260cd1e2e1ec2ed53b1222d818334848ad738581b5df0d539fc12968f581"
+      "sha256": "f8289bec778af175ce90a660e9c5763303208845345591b519e612d291e28b86"
     },
     {
       "name": "benchmark-checklist",
@@ -36,11 +36,11 @@
     },
     {
       "name": "create-formal-verification-skill",
-      "sha256": "30ef0ac27612ecd16fdc081112113221d673053cef3f8603db11932193861211"
+      "sha256": "1e1e3f9a0476f0de06d1b94ac7fe5fc9a8cde5e9568a1367e4867c33f149df93"
     },
     {
       "name": "create-verification-skill",
-      "sha256": "14866db81d9a6cc8581ec87a7288235cdb9bbde87e44155b76a9256d69bc8d78"
+      "sha256": "0bb7fbb38cd26293fcc97cd44fb9b8b5b24ca4b2f93c773eba2024f6acb53540"
     },
     {
       "name": "figure-it-out",
@@ -48,7 +48,7 @@
     },
     {
       "name": "how",
-      "sha256": "58d29e907ae32fd3b264b02691d8d8c086db4fd2df470c547eabcf1d89b739cb"
+      "sha256": "1e61dfa1a78a36e01f3f1a7cb80e6630c8eb203865bed9e5790def2515014010"
     },
     {
       "name": "in-your-own-words",
@@ -60,35 +60,35 @@
     },
     {
       "name": "ketchup",
-      "sha256": "dee4b30b104bef19ef7f65a0257e644269bfcedcc7d4dad903a6f245c32884bb"
+      "sha256": "7e9001bab7dde844dc9a35cd0f261ecf4a8b72a37d2276e64e3861e760f95e45"
     },
     {
       "name": "ketchup-video",
-      "sha256": "7faf1aa38386986ac99a7d0573f206f23789c61ab7b8bb2aff4fed331aa46613"
+      "sha256": "c91c932893aadf60cd50f3a8746cbd65a3b2bfa379683cc360ffc0b86f80a92b"
     },
     {
       "name": "maintain-formal-verification-skill",
-      "sha256": "0c96f54293542d3818b68754562b338073958781a9684454611dca37592e2d2c"
+      "sha256": "334e30f05b43a79d96e6e470f7bc07b1918174eeaf45e538ef093921ac824125"
     },
     {
       "name": "maintain-verification-skill",
-      "sha256": "9ed4e9bd6d67005dfcee74375c6085e6616decb98937c8066a19d27876c0ae6c"
+      "sha256": "14709e6c3be5b3a08ee4f6a32b7eaf7d1ac56d67c960e59dbd01256a9d937e06"
     },
     {
       "name": "make-bot-ui",
-      "sha256": "df76cbbdfed7ea709b7c4182abd91d060e89ff6487fe771540112f3a6123b814"
+      "sha256": "e6a8609adb248ff971d54f7f4e1daa422296dd5fb8ceb8ad174c84b19e3b03ad"
     },
     {
       "name": "no-comments",
-      "sha256": "e46c895ad60625633415b102f75f444ba01c0ae258da6abe08e82b45198f0efa"
+      "sha256": "b3a1b967dbee7fff455a6b6c65d97db930f6ec52546a3bd8098ed843402f53dd"
     },
     {
       "name": "poteto-help",
-      "sha256": "c92ddf0b4723d14f98e4ff39cc85de2c2c53d9d05841a55dea3edf043653af57"
+      "sha256": "4da452821bd763768fbc30157c2034b7e080cd4e79d8247ff0dcf34b37c6f340"
     },
     {
       "name": "poteto-mode",
-      "sha256": "d982c54c69afc2e54fcc38744ad7245ee225f0abb46b835bf3cc7c8e392e354d"
+      "sha256": "ac31f16830ac24248100b7f736f3c5749741bf61f990a73e729c61b4825672f9"
     },
     {
       "name": "principle-attack-the-premise",
@@ -188,15 +188,15 @@
     },
     {
       "name": "recall",
-      "sha256": "079689fb1ae9ec52ea74a06779572d53b83888a6b29ea81d84b6381f674bf910"
+      "sha256": "5dd7b4b48732d35619a941840ed9f5bff53dd5fc5f4714ca3c80dbb18813ce54"
     },
     {
       "name": "reflect",
-      "sha256": "4854bed3af2249352ce4cc305e198954ab98e44ca781d9f16743d1fdc2956adc"
+      "sha256": "6067b186b82d27a74c47538e00e3b93a9e07873430b5312c4a9a03f42b6bac02"
     },
     {
       "name": "setup-pstack",
-      "sha256": "c85ed14b1569ca8a8a6c4792f3421e6b8413c32e2004ec6fe3354cf99bbe6300"
+      "sha256": "523f4f318f9fdf82804bfc91a655f80e68b4cfc35d0d92f658d8ba22a304b6f7"
     },
     {
       "name": "sharpen",
@@ -204,7 +204,7 @@
     },
     {
       "name": "show-me-your-work",
-      "sha256": "27b5068dfaadbeac540a0c9354f91be25207f69574a6a6ab98905fcc700001a3"
+      "sha256": "10b6d4467dbaba4d9688ad32392df4d56f01858bf521e5c9f9f0f89393bd5b57"
     },
     {
       "name": "statechart",
@@ -212,7 +212,7 @@
     },
     {
       "name": "swarm",
-      "sha256": "df6b9801d4041f205f556703e0d9cebcd0e9b366defc5318ba33f08bbccc3ce6"
+      "sha256": "9c6d7ed24ec1a76a0b81d1531e05c509a4372e7d2ebbb46489d7ccd2dd80bcf1"
     },
     {
       "name": "tdd",
@@ -236,7 +236,7 @@
     },
     {
       "name": "why",
-      "sha256": "e623cef5ae6cb71fea8e61e5f29c5cb44484c47b6d3725d88fdcf4054d5bc26b"
+      "sha256": "3d7f66727dab6df54cbc4c6b618f1cf098c62b39ccc81bed8bef17ea5e83e14b"
     }
   ],
   "ruleIds": [

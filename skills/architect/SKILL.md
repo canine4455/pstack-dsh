@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Architect
 
+In DeepSeek Harness, read [the DSH adapter](../../harness/dsh.md) once before following this step. It maps every Cursor name below to DSH, and says which fields to drop.
+
 Sketch types, function signatures, class shapes, and module boundaries with `not implemented` bodies and pseudocode. Synthesize across multiple model perspectives, then fill in code against the chosen sketch.
 
 ## Start

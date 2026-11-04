@@ -107,25 +107,37 @@ for (const tree of TREES) {
     let expected = upstream;
     for (const rule of rules.rules) expected = applies(rule, expected);
     const pointer = new RegExp(rules.pointerWhen).test(upstream) && rel.endsWith("SKILL.md") ? rules.pointer : undefined;
-    if (pointer) expected = expected.replace(/^(# .*)\n+/, `$1\n\n${pointer}\n\n`);
+    if (pointer) expected = expected.replace(/^(# .*)\n+/m, `$1\n\n${pointer}\n\n`);
     const shipped = shippedBytes.toString("utf8");
     if (expected !== shipped) {
       fail(`${tree}/${rel} is not rewrite(upstream); regenerate with tools/adapt.mjs`);
       continue;
     }
-    // Line audit: drop the pointer line, then every differing line must be
-    // justified by a rule. Proves the mirror cannot quietly paraphrase.
+    // Line audit: drop the pointer line, then walk both sides. A differing
+    // upstream line must be matched by a rule; a lone blank on the shipped side
+    // is the paragraph break the pointer introduced. Proves the mirror cannot
+    // quietly paraphrase anything the table does not list.
     const upstreamLines = upstream.split("\n");
     const shippedLines = shipped.split("\n").filter((line) => line !== pointer);
-    if (upstreamLines.length !== shippedLines.length) {
-      fail(`${tree}/${rel} changed its line count; rules may only rewrite within a line`);
-      continue;
-    }
-    for (let i = 0; i < upstreamLines.length; i += 1) {
-      if (upstreamLines[i] === shippedLines[i]) continue;
-      if (!rules.rules.some((rule) => matches(rule, upstreamLines[i]))) {
+    let i = 0;
+    let j = 0;
+    while (i < upstreamLines.length && j < shippedLines.length) {
+      if (upstreamLines[i] === shippedLines[j]) {
+        i += 1;
+        j += 1;
+      } else if (pointer && shippedLines[j] === "") {
+        j += 1;
+      } else if (rules.rules.some((rule) => matches(rule, upstreamLines[i]))) {
+        i += 1;
+        j += 1;
+      } else {
         fail(`${tree}/${rel}:${i + 1} changed with no matching rule in harness/dsh.md`);
+        i = Infinity;
+        break;
       }
+    }
+    if (i !== Infinity && (i !== upstreamLines.length || j !== shippedLines.length)) {
+      fail(`${tree}/${rel} changed its line count; rules may only rewrite within a line`);
     }
   }
 }

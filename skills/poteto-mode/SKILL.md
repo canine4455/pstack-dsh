@@ -8,6 +8,8 @@ color: yellow
 
 # Poteto mode
 
+In DeepSeek Harness, read [the DSH adapter](../../harness/dsh.md) once before following this step. It maps every Cursor name below to DSH, and says which fields to drop.
+
 Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's absolute path in every pstack delegate prompt.
 
 ## Non-negotiables

@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Swarm
 
+In DeepSeek Harness, read [the DSH adapter](../../harness/dsh.md) once before following this step. It maps every Cursor name below to DSH, and says which fields to drop.
+
 ## Start
 
 Open a todolist with one entry per phase before launching anything.

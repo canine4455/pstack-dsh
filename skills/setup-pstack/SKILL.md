@@ -5,6 +5,8 @@ description: Configure which models pstack uses per role and at what reasoning b
 
 # Setup pstack
 
+In DeepSeek Harness, read [the DSH adapter](../../harness/dsh.md) once before following this step. It maps every Cursor name below to DSH, and says which fields to drop.
+
 Emit the equivalent `~/.dsh/settings.yaml` snippet that sets pstack's model per role. Do not write that file yourself; the operator adopts it by hand.
 
 ## Steps
