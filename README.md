@@ -43,3 +43,5 @@ node tools/verify-install.mjs
 ```
 
 Offline, and no DSH process needed. It prints which package root it tested, then one line per check. Outside a DSH profile the `@deepseek-ai/*` peer packages are absent, so the patch-target import check reports SKIP instead of FAIL; every other check is real.
+
+[`EVIDENCE.md`](EVIDENCE.md) records the acceptance run for this mirror: the commands, their real output, and every place the result differed from the plan.
