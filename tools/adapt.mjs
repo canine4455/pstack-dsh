@@ -90,6 +90,7 @@ function withPointer(text, pointer, matched) {
 
 function build(rules) {
   const tally = new Map();
+  const normalised = new Set();
   const files = new Map();
   for (const [, sourceDir, outDir] of SOURCES) {
     if (!existsSync(sourceDir)) {
@@ -100,16 +101,21 @@ function build(rules) {
       const rel = relative(sourceDir, path);
       const bytes = readFileSync(path);
       const isSkillFile = rel.endsWith("SKILL.md");
-      const text = rel.endsWith(".md") ? bytes.toString("utf8") : undefined;
       let out = bytes;
-      if (text !== undefined) {
+      if (rel.endsWith(".md")) {
+        // Canonicalise line endings so a Windows checkout and the Linux runner
+        // produce identical bytes. Upstream is LF; tools/check-adaptation.mjs
+        // fails loudly if that ever stops being true.
+        const raw = bytes.toString("utf8");
+        const text = raw.replace(/\r\n/g, "\n");
+        if (text !== raw) normalised.add(rel);
         const matched = new RegExp(rules.pointerWhen).test(text);
         out = Buffer.from(withPointer(rewrite(text, rules.rules, tally), rules.pointer, matched && isSkillFile));
       }
       files.set(join(outDir, rel), out);
     }
   }
-  return { files, tally };
+  return { files, tally, normalised };
 }
 
 function manifestFor(files, rules) {
@@ -160,7 +166,7 @@ if (!existsSync(join(VENDOR, "plugin.json"))) {
   process.exit(1);
 }
 
-const { files, tally } = build(rules);
+const { files, tally, normalised } = build(rules);
 const manifest = manifestFor(files, rules);
 const packageText = syncPackageVersion(manifest.upstreamVersion);
 
@@ -193,5 +199,8 @@ if (CHECK) {
   );
   if (silent.length > 0) {
     console.log(`note: ${silent.length} rule(s) matched nothing upstream: ${silent.map((rule) => rule.id).join(", ")}`);
+  }
+  if (normalised.size > 0) {
+    console.log(`note: normalised CRLF to LF in ${normalised.size} upstream file(s)`);
   }
 }

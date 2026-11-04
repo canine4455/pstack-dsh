@@ -78,6 +78,13 @@ for (const tree of TREES) {
     fail(`vendor/pstack/${tree}/ is missing; upstream layout changed`);
     continue;
   }
+  // Upstream is LF. If that ever changes, normalisation would silently break
+  // byte fidelity, so say so instead of hiding it.
+  for (const path of walk(sourceDir)) {
+    if (path.endsWith(".md") && readFileSync(path).includes(13)) {
+      fail(`${relative(ROOT, path)} carries CRLF; upstream is LF and the mirror normalises to LF`);
+    }
+  }
   const upstreamFiles = walk(sourceDir);
   const shippedFiles = walk(outDir);
   const upstreamSet = new Set(upstreamFiles.map((path) => relative(sourceDir, path)));
@@ -96,7 +103,7 @@ for (const tree of TREES) {
       if (!upstreamBytes.equals(shippedBytes)) fail(`${tree}/${rel} is not byte-identical to upstream`);
       continue;
     }
-    const upstream = upstreamBytes.toString("utf8");
+    const upstream = upstreamBytes.toString("utf8").replace(/\r\n/g, "\n");
     let expected = upstream;
     for (const rule of rules.rules) expected = applies(rule, expected);
     const pointer = new RegExp(rules.pointerWhen).test(upstream) && rel.endsWith("SKILL.md") ? rules.pointer : undefined;
