@@ -9,18 +9,23 @@
  *
  * `--strict` exists because a check that is skipped is a check that did not run,
  * and "1 skipped, 0 failed" is exactly how a dead copy of this package passes.
- * Under `--strict` the *only* tolerated skip is the whitelisted one below; every
- * other skip is turned into a failure at the end of the run.
+ * Under `--strict` the *only* tolerated skip is the one below; every other skip is
+ * turned into a failure at the end of the run.
  *
- * Whitelist (one entry, and here is why it is legitimate):
+ * Whitelist - and it is a name set, not a prefix:
  *   id: peer-import
- *   The patch target imports `@deepseek-ai/dsh-skill-filesystem`, which is an
- *   *optional* peer (package.json `peerDependenciesMeta`), provided by DSH itself
- *   and absent by construction outside a DSH profile. The check therefore cannot
- *   run in a bare consumer project or on a CI runner, and skipping it there says
- *   nothing about the package. Inside a profile it runs for real. Anything else
- *   that would skip — a missing skills/ tree, an unreadable manifest, a package
- *   under test that cannot be identified — is a defect and must fail.
+ *   A skip is legal only when the module that failed to resolve is named by the
+ *   *package under test's own* `package.json.peerDependencies`. The set is read at
+ *   runtime from that file, never hardcoded here, so the whitelist can only ever
+ *   be "the peers this package declared" - and an import of any other package
+ *   (declared nowhere) is a defect, even when it looks like a peer:
+ *
+ *       import "@deepseek-ai/dsh-skill-filesystem-v2"   ->  FAIL, not SKIP
+ *
+ *   Matching on a `@deepseek-ai/` prefix instead would wave that through; the
+ *   prefix is not the contract, the declaration is. The skip's reason line states
+ *   the facts (which peer, optional or not, unresolvable here) rather than claiming
+ *   the run is "outside a profile", which is false inside one.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -41,6 +46,7 @@ let passed = 0;
 let skipped = 0;
 let failed = 0;
 const skippedIds = [];
+const skippedPeers = [];
 function pass(label, detail) {
   passed++;
   console.log(`PASS  ${label}${detail ? ` (${detail})` : ""}`);
@@ -49,10 +55,23 @@ function fail(label, reason) {
   failed++;
   console.log(`FAIL  ${label}: ${reason}`);
 }
-function skip(id, label, reason) {
+function skip(id, label, reason, peer) {
   skipped++;
   skippedIds.push(id);
+  if (peer) skippedPeers.push(peer);
   console.log(`SKIP  ${label}: ${reason}`);
+}
+
+/** The package root of a bare specifier: `@scope/name` or `name` (subpaths dropped). */
+function packageRootOf(specifier) {
+  const parts = specifier.split("/");
+  return specifier.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
+}
+
+/** The module Node says it could not find, or undefined for any other failure. */
+function missingSpecifier(err) {
+  if (err?.code !== "ERR_MODULE_NOT_FOUND") return undefined;
+  return /Cannot find (?:package|module) '([^']+)'/.exec(String(err?.message ?? err))?.[1];
 }
 
 // Hand-rolled: four scalar keys per file, so the `yaml` dependency is not worth it.
@@ -97,7 +116,7 @@ async function main() {
     }
   }
   console.log(`package under test: ${root}\nvia: ${via}`);
-  if (STRICT) console.log(`mode: --strict (only the whitelisted skip ${JSON.stringify([...WHITELISTED_SKIPS])} is tolerated)\n`);
+  if (STRICT) console.log(`mode: --strict (only a module named in this package's peerDependencies may be skipped)\n`);
   else console.log("");
 
   const pkgPath = join(root, "package.json");
@@ -109,6 +128,10 @@ async function main() {
     return fail("package.json parses", err.message);
   }
   pass("package.json exists and parses");
+  // The whitelist, read from the package under test rather than hardcoded here:
+  // a skip is legal only for a module this package itself declares as a peer.
+  const declaredPeers = new Set(Object.keys(pkg.peerDependencies ?? {}));
+  const peerMeta = pkg.peerDependenciesMeta ?? {};
   pkg.name === PKG ? pass(`name is "${PKG}"`) : fail(`name is "${PKG}"`, `found ${JSON.stringify(pkg.name)}`);
   pkg.private === true ? pass("private is true") : fail("private is true", `found ${JSON.stringify(pkg.private)}`);
   // An `exports` map would fence off `extensions/...` and make the bare-specifier
@@ -144,8 +167,24 @@ async function main() {
     bad.length > 0 ? fail(importLabel, bad.join("; ")) : pass(importLabel, `inject=${JSON.stringify(mod.inject)}`);
   } catch (err) {
     const reason = String(err?.message ?? err).split("\n")[0];
-    if (err?.code === "ERR_MODULE_NOT_FOUND" && /@deepseek-ai\//.test(reason)) {
-      skip("peer-import", importLabel, `optional DSH peer absent outside a profile (whitelisted) — ${reason}`);
+    const missing = missingSpecifier(err);
+    const peerName = missing ? packageRootOf(missing) : undefined;
+    if (peerName && declaredPeers.has(peerName)) {
+      const optional = peerMeta[peerName]?.optional === true;
+      skip(
+        "peer-import",
+        importLabel,
+        `peer "${peerName}" is declared in this package's peerDependencies (optional: ${optional}) and does not resolve from ${root} — ${reason}`,
+        peerName,
+      );
+    } else if (missing) {
+      // Anything else that fails to resolve — including an undeclared package in
+      // the same namespace — is a broken patch target, not an environment gap.
+      fail(
+        importLabel,
+        `imports "${missing}", which is not declared in this package's peerDependencies ` +
+          `(declared peers: ${[...declaredPeers].join(", ") || "none"}) — ${reason}`,
+      );
     } else {
       fail(importLabel, reason);
     }
@@ -214,6 +253,7 @@ if (STRICT && unwhitelisted.length > 0) {
   console.log(`FAIL  --strict: ${unwhitelisted.length} skip(s) outside the whitelist ${JSON.stringify([...WHITELISTED_SKIPS])}: ${unwhitelisted.join(", ")}`);
   failed += unwhitelisted.length;
 } else if (STRICT) {
-  console.log(`strict: every skip is on the whitelist ${JSON.stringify([...WHITELISTED_SKIPS])}`);
+  const named = skippedPeers.length > 0 ? `, all of them declared peers: ${JSON.stringify(skippedPeers)}` : "";
+  console.log(`strict: ${skipped} skip(s)${named} — nothing outside peerDependencies was skipped`);
 }
 process.exitCode = failed === 0 ? 0 : 1;

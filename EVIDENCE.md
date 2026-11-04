@@ -61,10 +61,11 @@ $ node node_modules/pstack-dsh/tools/verify-install.mjs
 verify-install: 12 passed, 1 skipped, 0 failed
 ```
 
-_(These counts are the pre-fix verifier: it has since gained the name-conflict
-check and `--strict`, so the same install now reports `14 passed, 1 skipped` in a
-source checkout and `14 passed, 0 skipped` against an installed copy. §A9 is the
-post-push re-run with the current tools.)_
+_(These counts are the pre-fix verifier: it has since gained the name-conflict check
+and `--strict`, so the same install now reports `14 passed, 1 skipped` in a source
+checkout and `14 passed, 0 skipped` against an installed copy. §A9 is the post-push
+re-run with the current tools, and §A9.1 shows what that one skip is allowed to be:
+only a module this package declares in `peerDependencies`.)_
 
 The subpath resolving to a real file is the point: the package has **no
 `exports` field**, so `pstack-dsh/extensions/dsh/index.js` resolves. The only
@@ -456,7 +457,7 @@ $ node node_modules/pstack-dsh/tools/verify-install.mjs --strict
 …
 PASS  no skill name collides with a host skill root (7 root(s), 78 host skills, 9 root(s) absent)
 verify-install: 13 passed, 1 skipped, 0 failed
-strict: every skip is on the whitelist ["peer-import"]
+strict: 1 skip(s), all of them declared peers: ["@deepseek-ai/dsh-skill-filesystem"] — nothing outside peerDependencies was skipped
 $ node node_modules/pstack-dsh/tools/check-name-conflicts.mjs | tail -2
 host skills seen: 78
 name conflicts: 0
@@ -488,7 +489,7 @@ $ gh run view 41858541232 --log
 Generated tree is up to date   pstack-dsh is up to date (58 skills, 537 files).
 Adaptation guard              adaptation guard passed: 58 skills, 66 rules, 0 forbidden constructs, 0 real local paths, 0 credential shapes.
 Install verifier (strict)     verify-install: 14 passed, 1 skipped, 0 failed
-                              strict: every skip is on the whitelist ["peer-import"]
+                              strict: 1 skip(s), all of them declared peers: ["@deepseek-ai/dsh-skill-filesystem"] — nothing outside peerDependencies was skipped
 Skill-name conflicts          SKIP /home/runner/.dsh/skills: directory does not exist
                               name conflicts: 0
 ```
@@ -501,6 +502,68 @@ silent.
 
 The push did **not** start a sync run: `sync-upstream` still triggers only on
 `schedule` and `workflow_dispatch`, so the network-touching surface is unchanged.
+
+### A9.1 — the strict whitelist is a name set, and it was not one before
+
+The first `--strict` matched a `@deepseek-ai/` *prefix*, which was wider than the
+claim it made: a patch target importing a package this package never declared could
+still skip out of the one check that matters. The gate is now the declaration — a
+skip is legal only when the unresolvable module is named in the *package under test's
+own* `peerDependencies`, read at runtime (three keys today:
+`@deepseek-ai/dsh-skill-filesystem`, `@deepseek-ai/dsh-llm`, `@deepseek-ai/dsh-agent`).
+Four states, each in its own copy under `%TEMP%`, with the declared peer stubbed into
+the copy so that it resolves:
+
+(a) control, unmodified copy, peer resolves:
+
+```
+$ node tools/verify-install.mjs --strict
+…
+verify-install: 15 passed, 0 skipped, 0 failed
+strict: 0 skip(s) — nothing outside peerDependencies was skipped
+EXIT=0
+```
+
+(b) the patch target imports `@deepseek-ai/dsh-skill-filesystem-v2`, declared nowhere:
+
+```
+$ node tools/verify-install.mjs --strict
+FAIL  patch target imports for real and exports apply() + inject ["skills"]: imports
+"@deepseek-ai/dsh-skill-filesystem-v2", which is not declared in this package's
+peerDependencies (declared peers: @deepseek-ai/dsh-skill-filesystem,
+@deepseek-ai/dsh-llm, @deepseek-ai/dsh-agent) — Cannot find package
+'@deepseek-ai/dsh-skill-filesystem-v2' imported from <copy>/extensions/dsh/index.js
+verify-install: 14 passed, 0 skipped, 1 failed
+EXIT=1
+
+$ node tools/verify-install.mjs --strict <copy>     # the verifier from eaaf7e5, same copy
+SKIP  patch target imports for real and exports apply() + inject ["skills"]: optional
+DSH peer absent outside a profile (whitelisted) — Cannot find package
+'@deepseek-ai/dsh-skill-filesystem-v2' …
+verify-install: 13 passed, 1 skipped, 0 failed
+EXIT=0
+```
+
+That pair is the defect and its closure on identical input.
+
+(c) `export function apply` renamed to `applyRenamed`:
+
+```
+FAIL  patch target imports for real and exports apply() + inject ["skills"]: no exported function `apply`
+verify-install: 14 passed, 0 skipped, 1 failed
+EXIT=1
+```
+
+(d) extra, outside the namespace entirely — `import … from "not-a-real-package"`:
+
+```
+FAIL  …: imports "not-a-real-package", which is not declared in this package's peerDependencies (declared peers: …)
+EXIT=1
+```
+
+The skip reason line was also lying in one case: it said "outside a profile", which is
+false inside a profile. It now states the facts — which declared peer, and whether
+that peer is marked optional in `peerDependenciesMeta`.
 
 ## Where fact diverged from the brief
 
@@ -569,8 +632,14 @@ The push did **not** start a sync run: `sync-upstream` still triggers only on
       sync workflow and the new `check.yml`.
     - "The patch target import SKIPs outside DSH" let a *dead copy* of this package
       pass with "1 skipped, 0 failed". `verify-install.mjs --strict` now fails on
-      every skip except that single whitelisted one, and a copy whose
-      `extensions/dsh/index.js` exports no `apply` is red.
+      every skip except a module this package declares in `peerDependencies`, and a
+      copy whose `extensions/dsh/index.js` exports no `apply` is red.
+    - That whitelist was **still too wide after the first fix**: it matched the
+      `@deepseek-ai/` prefix, so a patch target importing an *undeclared* peer
+      (`…-filesystem-v2`) skipped its way to `13 passed, 1 skipped, 0 failed`, exit 0
+      — a dead copy, green. Found by cold review, closed in A9.1: the gate is now the
+      package's own `peerDependencies` key set, read at runtime. Same copy, pre-fix
+      verifier: exit 0; current verifier: exit 1.
 13. **The guard skipped its drift policy without saying so** when there was no
     `.git`/HEAD (an installed copy, or a fresh checkout). It now prints
     `NOTE drift policy skipped: …` every time, so "nothing to compare against" is
