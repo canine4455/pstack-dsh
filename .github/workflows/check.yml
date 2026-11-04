@@ -1,0 +1,56 @@
+name: check
+
+# Offline verification for a push or a pull request.
+#
+# Division of labour with sync-upstream.yml: that workflow is the *only* thing
+# that touches the network (it mirrors cursor/plugins) and the only thing with
+# write permission; it runs on a schedule or on demand. This workflow never
+# clones upstream, never writes, and never commits — it only proves that what is
+# already committed is self-consistent, on every push, so a hand-edited tree or a
+# stale generated tree fails here within seconds instead of at 03:17 the next day.
+#
+# Loop safety: this workflow has `contents: read` and pushes nothing, so it
+# cannot trigger itself. The actor guard below is not about loops — it skips the
+# push a scheduled sync makes as github-actions[bot], because sync-upstream
+# already ran these same checks on that exact tree in the same run.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # 1. the generated tree is exactly what the generator would write now.
+      - name: Generated tree is up to date
+        run: node tools/adapt.mjs --check
+
+      # 2. and it only differs from upstream where the rule table says.
+      - name: Adaptation guard
+        run: node tools/check-adaptation.mjs
+
+      # 3. the package is loadable as installed, with no skip left unattended.
+      - name: Install verifier (strict)
+        run: node tools/verify-install.mjs --strict
+
+      # 4. no skill name collides with a host skill root. A runner has no ~/.dsh,
+      #    so this prints SKIP <root>: directory does not exist for every root —
+      #    visibly, not silently — and exits 0. In a real profile it compares.
+      - name: Skill-name conflicts
+        run: node tools/check-name-conflicts.mjs

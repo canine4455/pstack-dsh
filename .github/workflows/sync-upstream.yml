@@ -7,9 +7,12 @@ name: sync-upstream
 #                          ->  skills/ + agents/ + extensions/dsh/skills.generated.json
 #                              (deterministic DSH adaptation, see tools/adapt.mjs)
 #
-# Idempotency: a run that finds no upstream change produces no commit. SYNC-LOG.md
-# records at most one row per (date, version, result); a repeated run re-derives the
-# identical row and therefore writes nothing.
+# Idempotency: a run that finds no upstream change writes nothing at all — no
+# SYNC-LOG.md row and no commit. "No change" is not an event; it lives in the
+# Actions run record and the job summary below, which is where a human looks for
+# "did the job run, and what did it see". SYNC-LOG.md therefore only ever grows on
+# a real change (an initial import, or a `Synced` row), and its dedupe is the
+# backstop for a re-run of a change that was already recorded.
 
 on:
   schedule:
@@ -71,7 +74,13 @@ jobs:
       - name: Guard against unadapted upstream text and upstream structural drift
         run: node tools/check-adaptation.mjs
 
-      - name: Record the run in SYNC-LOG.md
+      - name: Guard against skill-name conflicts with the host
+        # No ~/.dsh on a runner, so every root is SKIPped with a printed reason.
+        # The step exists for the profile case and to keep one command shape
+        # shared with check.yml; it must never pass by staying silent.
+        run: node tools/check-name-conflicts.mjs
+
+      - name: Record a real upstream change in SYNC-LOG.md
         run: |
           set -euo pipefail
           version="$(node -p 'JSON.parse(require("node:fs").readFileSync("vendor/pstack/plugin.json","utf8")).version')"
@@ -81,6 +90,12 @@ jobs:
           else
             result="No change"
           fi
+          echo "SYNC_RESULT=$result" >> "$GITHUB_ENV"
+          if [ "$result" = "No change" ]; then
+            # Nothing changed upstream: do not touch the log, do not commit.
+            echo "no upstream change: SYNC-LOG.md is not touched and nothing will be committed"
+            exit 0
+          fi
           date="$(date -u +%Y-%m-%d)"
           node -e '
             const fs = require("node:fs");
@@ -89,7 +104,7 @@ jobs:
             const path = "SYNC-LOG.md";
             const lines = fs.readFileSync(path, "utf8").split("\n");
             if (lines.includes(row)) {
-              console.log(`SYNC-LOG.md already has today'"'"'s row: ${row}`);
+              console.log(`SYNC-LOG.md already has this row: ${row}`);
               process.exit(0);
             }
             const at = lines.findIndex((line) => /^\| *-/.test(line));
@@ -98,7 +113,6 @@ jobs:
             fs.writeFileSync(path, lines.join("\n"));
             console.log(`SYNC-LOG.md appended: ${row}`);
           ' "$date" "$version" "$result"
-          echo "SYNC_RESULT=$result" >> "$GITHUB_ENV"
 
       - name: Commit and push only when something changed
         run: |
@@ -111,11 +125,13 @@ jobs:
             exit 0
           fi
           version="$(node -p 'JSON.parse(require("node:fs").readFileSync("vendor/pstack/plugin.json","utf8")).version')"
-          if [ "$SYNC_RESULT" = "No change" ]; then
-            git commit -m "chore(sync-log): record no pstack ${version} change"
-          else
-            git commit -m "sync: pstack ${version} from ${UPSTREAM_SHA}"
+          if [ "${SYNC_RESULT:-}" = "No change" ] || [ -z "${SYNC_RESULT:-}" ]; then
+            # Unreachable by construction: a No change run writes no row, so the
+            # tree cannot differ here. Say so instead of inventing a message.
+            echo "::error::the tree changed but SYNC_RESULT is ${SYNC_RESULT:-unset}; refusing to guess a commit message"
+            exit 1
           fi
+          git commit -m "sync: pstack ${version} from ${UPSTREAM_SHA}"
           git push
 
       - name: Job summary
@@ -128,6 +144,9 @@ jobs:
             echo "| --- | --- |"
             echo "| upstream commit | \`${UPSTREAM_SHA:-unknown}\` |"
             echo "| result | ${SYNC_RESULT:-failed before logging} |"
+            if [ "${SYNC_RESULT:-}" = "No change" ]; then
+              echo "| SYNC-LOG.md | untouched (a no-change run is not an event) |"
+            fi
             if [ -f extensions/dsh/skills.generated.json ]; then
               echo "| skills | $(node -p 'JSON.parse(require("node:fs").readFileSync("extensions/dsh/skills.generated.json","utf8")).skills.length') |"
             fi
