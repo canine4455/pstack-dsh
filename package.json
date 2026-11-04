@@ -1,0 +1,45 @@
+{
+  "name": "pstack-dsh",
+  "version": "0.15.36",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "pstack skills, adapted for DeepSeek Harness. Unofficial mirror of cursor/plugins/pstack.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canine4455/pstack-dsh.git"
+  },
+  "keywords": [
+    "pi-package",
+    "agent-skills",
+    "pstack",
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./extensions/dsh/cordis.patch.yml"
+    }
+  },
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-skill-filesystem": ">=0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm": ">=0.1.0-rc.6",
+    "@deepseek-ai/dsh-agent": ">=0.1.0-rc.6"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-skill-filesystem": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-agent": {
+      "optional": true
+    }
+  }
+}

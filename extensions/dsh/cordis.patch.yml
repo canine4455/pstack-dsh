@@ -1,0 +1,15 @@
+# Thin DSH bundle layer for pstack-dsh.
+#
+# This repository is a mirror: `vendor/pstack/` holds upstream verbatim and
+# `skills/` is generated from it by tools/adapt.mjs. This patch contributes one
+# thing and no more — an isolated skill-filesystem provider that reads this
+# package's adapted skills/ tree. The host's own provider, its skill tool, and
+# its discovery roots are left untouched; no runtime authority is added.
+#
+# `name:` is a bare package specifier on purpose. This package is unscoped and
+# its directory name equals its package name, so Node resolves
+# `pstack-dsh/extensions/dsh/index.js` from the profile's node_modules. A scoped
+# package name would need an absolute `file:///` URL here instead.
+- insert:
+    - id: pstack-skills
+      name: 'pstack-dsh/extensions/dsh/index.js'

@@ -1,0 +1,26 @@
+pstack-dsh
+==========
+
+pstack skills, adapted for DeepSeek Harness.
+
+This repository is a derivative work of pstack, the plugin that lives in
+`cursor/plugins/pstack` of https://github.com/cursor/plugins.
+
+    Upstream author : Poteto
+    Upstream source : https://github.com/cursor/plugins/tree/main/pstack
+    Upstream license: MIT (see LICENSE, which keeps the upstream copyright line)
+    Upstream version: see `version` in vendor/pstack/plugin.json
+
+What is original here, and what is not
+--------------------------------------
+
+* `vendor/pstack/` is a verbatim snapshot of upstream. It is written by the
+  sync workflow only; never edit it by hand.
+* `skills/` and `agents/` are generated from `vendor/pstack/` by
+  `tools/adapt.mjs`, which applies only the rewrites listed in
+  `harness/dsh.md`. Every other byte is upstream's. Do not edit them by hand.
+* The DeepSeek Harness adaptation layer is an independent contribution and is
+  not endorsed by, affiliated with, or reviewed by the upstream author:
+  `extensions/dsh/`, `harness/dsh.md`, `tools/*.mjs`, the sync workflow.
+
+Unofficial. If upstream behaviour and this mirror disagree, upstream is right.

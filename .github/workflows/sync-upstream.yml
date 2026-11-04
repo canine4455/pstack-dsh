@@ -1,0 +1,133 @@
+name: sync-upstream
+
+# Mirrors pstack from the cursor/plugins monorepo into this repository.
+#
+# The mirror is regenerated, never hand-edited:
+#   cursor/plugins/pstack  ->  vendor/pstack  (verbatim upstream)
+#                          ->  skills/ + agents/ + extensions/dsh/skills.generated.json
+#                              (deterministic DSH adaptation, see tools/adapt.mjs)
+#
+# Idempotency: a run that finds no upstream change produces no commit. SYNC-LOG.md
+# records at most one row per (date, version, result); a repeated run re-derives the
+# identical row and therefore writes nothing.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Sparse clone cursor/plugins (pstack/ only)
+        run: |
+          set -euo pipefail
+          up="$RUNNER_TEMP/cursor-plugins"
+          rm -rf "$up"
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/cursor/plugins "$up"
+          git -C "$up" sparse-checkout set pstack
+          if [ ! -d "$up/pstack" ]; then
+            echo "::error::upstream structure changed: cursor/plugins/pstack/ no longer exists"
+            exit 1
+          fi
+          if [ ! -f "$up/pstack/plugin.json" ]; then
+            echo "::error::upstream structure changed: cursor/plugins/pstack/plugin.json is missing"
+            exit 1
+          fi
+          if [ ! -d "$up/pstack/skills" ]; then
+            echo "::error::upstream structure changed: cursor/plugins/pstack/skills/ is missing"
+            exit 1
+          fi
+          echo "UPSTREAM_SHA=$(git -C "$up" rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Mirror upstream into vendor/pstack
+        run: |
+          set -euo pipefail
+          rsync -a --delete --exclude='.git*' "$RUNNER_TEMP/cursor-plugins/pstack/" vendor/pstack/
+
+      - name: Regenerate skills/, agents/ and generated fragments
+        run: node tools/adapt.mjs
+
+      - name: Guard against unadapted upstream text and upstream structural drift
+        run: node tools/check-adaptation.mjs
+
+      - name: Record the run in SYNC-LOG.md
+        run: |
+          set -euo pipefail
+          version="$(node -p 'JSON.parse(require("node:fs").readFileSync("vendor/pstack/plugin.json","utf8")).version')"
+          # Anything outside SYNC-LOG.md counts as an upstream change.
+          if [ -n "$(git status --porcelain -- . ':(exclude)SYNC-LOG.md')" ]; then
+            result="Synced \`${UPSTREAM_SHA:0:7}\`"
+          else
+            result="No change"
+          fi
+          date="$(date -u +%Y-%m-%d)"
+          node -e '
+            const fs = require("node:fs");
+            const [date, version, result] = process.argv.slice(1);
+            const row = `| ${date} | ${version} | ${result} |`;
+            const path = "SYNC-LOG.md";
+            const lines = fs.readFileSync(path, "utf8").split("\n");
+            if (lines.includes(row)) {
+              console.log(`SYNC-LOG.md already has today'"'"'s row: ${row}`);
+              process.exit(0);
+            }
+            const at = lines.findIndex((line) => /^\| *-/.test(line));
+            if (at < 0) throw new Error("SYNC-LOG.md has no markdown table separator row");
+            lines.splice(at + 1, 0, row);
+            fs.writeFileSync(path, lines.join("\n"));
+            console.log(`SYNC-LOG.md appended: ${row}`);
+          ' "$date" "$version" "$result"
+          echo "SYNC_RESULT=$result" >> "$GITHUB_ENV"
+
+      - name: Commit and push only when something changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "::notice::no upstream change; nothing to commit"
+            exit 0
+          fi
+          version="$(node -p 'JSON.parse(require("node:fs").readFileSync("vendor/pstack/plugin.json","utf8")).version')"
+          if [ "$SYNC_RESULT" = "No change" ]; then
+            git commit -m "chore(sync-log): record no pstack ${version} change"
+          else
+            git commit -m "sync: pstack ${version} from ${UPSTREAM_SHA}"
+          fi
+          git push
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## pstack-dsh sync"
+            echo
+            echo "| field | value |"
+            echo "| --- | --- |"
+            echo "| upstream commit | \`${UPSTREAM_SHA:-unknown}\` |"
+            echo "| result | ${SYNC_RESULT:-failed before logging} |"
+            if [ -f extensions/dsh/skills.generated.json ]; then
+              echo "| skills | $(node -p 'JSON.parse(require("node:fs").readFileSync("extensions/dsh/skills.generated.json","utf8")).skills.length') |"
+            fi
+            echo
+            echo "SYNC-LOG.md:"
+            echo '```'
+            cat SYNC-LOG.md
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

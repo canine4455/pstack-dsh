@@ -1,0 +1,310 @@
+{
+  "generator": "tools/adapt.mjs",
+  "adapter": "harness/dsh.md",
+  "note": "Generated. Do not edit skills/ or agents/ by hand; run tools/adapt.mjs.",
+  "upstreamVersion": "0.15.36",
+  "upstreamDigest": "ccf5b07d487b01d2e574e9fa0fb204391c54ca54e03c50e7783131134c730e03",
+  "skillCount": 58,
+  "skills": [
+    {
+      "name": "architect",
+      "sha256": "5887fdc428df239f2f43d6f1cac2545b4c8d84ce025ec1792996586aa9663eaa"
+    },
+    {
+      "name": "arena",
+      "sha256": "df407b52fe02913f1f94dea6d5a8c56ee07b9ce63cff128eacb563d7ed70353d"
+    },
+    {
+      "name": "automate-me",
+      "sha256": "dc942549d10aa864f1630420b60f368dcbdb073bda61594f9822580a8e9dae6d"
+    },
+    {
+      "name": "benchmark-checklist",
+      "sha256": "fad95c3db92afb627cf3e70d98a0d97009c25100ecfff3ccf9816a8f62a92bd4"
+    },
+    {
+      "name": "blast-radius",
+      "sha256": "051757390cf26aa9fbfaad4a6958473d0c287cc9201e0e8072b6ae9bcde880c2"
+    },
+    {
+      "name": "bro",
+      "sha256": "5803b79e1e6c444e3b3c2705f89a9f4ba98c502f9841fce906e61acf52af35ea"
+    },
+    {
+      "name": "correct",
+      "sha256": "751860d7e5d0f1d2a6c1eced47fd3806539b692499b359ffcb9bf7e5202e0a7f"
+    },
+    {
+      "name": "create-formal-verification-skill",
+      "sha256": "701ac5431a606d0ff0b4a4488e60d5899b3074a503e4287e82f023a9020ba7b5"
+    },
+    {
+      "name": "create-verification-skill",
+      "sha256": "b8208fd14e888ccd0ab713eb3aefb3ec142d550cfa82cd8d9817a40ffc3b241c"
+    },
+    {
+      "name": "figure-it-out",
+      "sha256": "9d30ba099f2125b4edfcf4742552263912fc467e4942127cddef206219d7ea63"
+    },
+    {
+      "name": "how",
+      "sha256": "cb4f103c6e039e8072584f3f81579845fbddda26d9a786bb09230e8946bbe2f7"
+    },
+    {
+      "name": "in-your-own-words",
+      "sha256": "5b7c7e430de4d165d019033db44cd9e4e5522e35dbb50ed5c04ac46c04711bb0"
+    },
+    {
+      "name": "interrogate",
+      "sha256": "ee7af3c8d69ab58f73a0fb3aefc0a4c82198fe06d911e189062901e62a496f11"
+    },
+    {
+      "name": "ketchup",
+      "sha256": "8348e24e8125ec5e307e1e701ffa419be21dba737018371405cd2fd46ccad0c6"
+    },
+    {
+      "name": "ketchup-video",
+      "sha256": "13de704a87eebe29b00ff8714b8484457c10924522c563bf1c6f94741afe9ec5"
+    },
+    {
+      "name": "maintain-formal-verification-skill",
+      "sha256": "7eaf05ada44eb69f521f6b2e167291b2431f9818fc892c72f8dd330e70681142"
+    },
+    {
+      "name": "maintain-verification-skill",
+      "sha256": "dd99ea81bbb5f9ab8380214042f3d63fccf479a86c300637a39a56f39264c791"
+    },
+    {
+      "name": "make-bot-ui",
+      "sha256": "39ee6c6cd00676048757f1ea33e0db3a1dc6ed4793bfddcff65749a289d1f2e0"
+    },
+    {
+      "name": "no-comments",
+      "sha256": "f5142afa2c08d2b8e20fe77360a1b689d340ca45f4ecd3c2a0418f460addbfcf"
+    },
+    {
+      "name": "poteto-help",
+      "sha256": "80ca9b05c4a595945f55fa202f002a86504e129fd4cfcd0b9ffe159abb1774a5"
+    },
+    {
+      "name": "poteto-mode",
+      "sha256": "f24ae375d81e8d70716bd87b40465c35d9143f736cfa20a8858809714df035fd"
+    },
+    {
+      "name": "principle-attack-the-premise",
+      "sha256": "ab9fbd16dd37a41b7dda9450c8d5de240be3db44c7a9933f41d2f8d69a993916"
+    },
+    {
+      "name": "principle-boundary-discipline",
+      "sha256": "99c74b6676a4ca8e55f17f5db1264244b97b58c953d32bd305744a193a995305"
+    },
+    {
+      "name": "principle-build-the-lever",
+      "sha256": "d86bd7df14255cf6127b93f54ad88e26d04251e14f0ca3f0e95a8ba6882b92c4"
+    },
+    {
+      "name": "principle-encode-lessons-in-structure",
+      "sha256": "7d15a5c25fb162482c4e6aa00beeb0ecc46294fe9f30751e079dbfe0b599328a"
+    },
+    {
+      "name": "principle-exhaust-the-design-space",
+      "sha256": "07bb407e31481401ce2e61c633e5cb7cdfb007af608f20bd3b370c05ca1c5111"
+    },
+    {
+      "name": "principle-experience-first",
+      "sha256": "e0ac62b729f0f15d541d4bd3a9b4403b6124d885dd1dd02a0aa4668404c41aad"
+    },
+    {
+      "name": "principle-explain-the-number",
+      "sha256": "b64706e83c1878b3769005f54cb9e0ec75166aa248ba7009bc5ecd21c98b4a13"
+    },
+    {
+      "name": "principle-fix-root-causes",
+      "sha256": "4d44853e6f1450a9cdc5f63cef165d873020bd633b03d9527f730fb35f4c947b"
+    },
+    {
+      "name": "principle-foundational-thinking",
+      "sha256": "db9c5d2cb14e950b52f7b74baaee8e56e548d915ffd22c376f29f39d95e8fa50"
+    },
+    {
+      "name": "principle-guard-the-context-window",
+      "sha256": "85ee5d22ec92696b24d70a8d030ceb722fea86ff3476c4351e4bb03480e69581"
+    },
+    {
+      "name": "principle-laziness-protocol",
+      "sha256": "a7fd58933078aee0076159c49ffc30e825f975d7b92633a5a15a84c5639fc402"
+    },
+    {
+      "name": "principle-make-operations-idempotent",
+      "sha256": "9097bea5ff9f56123a7c66ac9048b6e08acd06c15303be0ca9b5f1645d512cc0"
+    },
+    {
+      "name": "principle-migrate-callers-then-delete-legacy-apis",
+      "sha256": "e792dea6bb2341ce6b4217301216b8a50d837eb08a007416d2222f4edd6d68c8"
+    },
+    {
+      "name": "principle-minimize-reader-load",
+      "sha256": "3a11658f01781aac7d0eb821853f3a1bb1c9692032b6027a5331e0212e439d72"
+    },
+    {
+      "name": "principle-model-the-domain",
+      "sha256": "3cd35fc4269b87edb3067cfd80a41c72d8f878328a7d87de183f9a31f3453c98"
+    },
+    {
+      "name": "principle-never-block-on-the-human",
+      "sha256": "9ef6d0f25519585c5fb894b7cc8c69641e761d657b175a567a80ce489c5db524"
+    },
+    {
+      "name": "principle-outcome-oriented-execution",
+      "sha256": "db7d50f932a368dbb926d954c109288373466fe11dc9f3f61b5a1f152850eb4e"
+    },
+    {
+      "name": "principle-prove-it-works",
+      "sha256": "06c9fc738540384e78fafc43c251e04d053f4e2dc5acef73245396da6cc8c60f"
+    },
+    {
+      "name": "principle-redesign-from-first-principles",
+      "sha256": "43b3b17dbab660576d55495ac021aa00e340836b3aff252ae7e0d14d78377771"
+    },
+    {
+      "name": "principle-separate-before-serializing-shared-state",
+      "sha256": "05cbc073c63c1d61cc3032a6d31b781b0d55337be8d51fa7b1259cbebe85957e"
+    },
+    {
+      "name": "principle-sequence-verifiable-units",
+      "sha256": "0b4407908c81a3368cc481ae835e04a71295810f918b45d16cbd1dbc2ba5734b"
+    },
+    {
+      "name": "principle-subtract-before-you-add",
+      "sha256": "27b8b45972f79938b661c5ac1c7b99777510935ac85fb8e948ebc25a2b1e55e1"
+    },
+    {
+      "name": "principle-test-behavior-not-implementation",
+      "sha256": "1264277f8c486a4cdc9ef73f9cbe8271254758f8b6c78702abc29efa68280297"
+    },
+    {
+      "name": "principle-type-system-discipline",
+      "sha256": "a8348a5e6f6b855a348032a0204f77db64bb61f04470f7fe26db972bad4ee1b7"
+    },
+    {
+      "name": "recall",
+      "sha256": "1398ef339d0d074cc4eef7899ca6c6c9bedc5b4a45707acc4c7caefa2df3d6f3"
+    },
+    {
+      "name": "reflect",
+      "sha256": "b96d7a7dad74879ba31d79409a5a0128e19ac54487872ee531a8d6ee977c36fb"
+    },
+    {
+      "name": "setup-pstack",
+      "sha256": "89ad993160acd44b5f5d53734025e28b424eaffb0aa7bae8cf70517e9559ca54"
+    },
+    {
+      "name": "sharpen",
+      "sha256": "5ab3f97f914a3a82fce606b0d2d65317f082692a3b91c0ba9c354d41cf0ca4a2"
+    },
+    {
+      "name": "show-me-your-work",
+      "sha256": "79c988e74db2a93926cc34ac69fd885acc94f5fc0bbeddfc3912db7943253b42"
+    },
+    {
+      "name": "statechart",
+      "sha256": "ad52026c7d5511695399935ad43430ff1dddc637ed98e2734b1b895bbf928516"
+    },
+    {
+      "name": "swarm",
+      "sha256": "2148632bf9f3a4112979370eaefa5f34d8c5f893458bf188acae8fce69f78df6"
+    },
+    {
+      "name": "tdd",
+      "sha256": "dc438d0d5e59482d88643eaffc2d85547a248aba2987c79ed74b3b2f280a2f11"
+    },
+    {
+      "name": "teach",
+      "sha256": "5849c4cdb9be7a84cddc8524273c53a1e4a1c09ea9e14592b94bc0ee2d3e0d09"
+    },
+    {
+      "name": "technical-writing",
+      "sha256": "3c1a00a006ba72b169e2a42533e1e4a55a8b39aa795ba0dc137556ccb02729d8"
+    },
+    {
+      "name": "typescript-best-practices",
+      "sha256": "3b895e480f067d9888ad1ebe6ec63e385dc39c463b6a6386dd7467fe92efffba"
+    },
+    {
+      "name": "unslop",
+      "sha256": "10c030ce08e1eb314cf9c4057323c482e82d2bea60f59ccc515722db87473635"
+    },
+    {
+      "name": "why",
+      "sha256": "7b15be14cecc3606dbe480326948db52dbf6016b3b1630ce88f89610a314892e"
+    }
+  ],
+  "ruleIds": [
+    "params-how-spawn",
+    "params-why-spawn",
+    "params-swarm-spawn",
+    "params-poteto-use",
+    "params-agent-mode",
+    "prose-kit-runtime-check",
+    "prose-setup-rule",
+    "prose-setup-budget",
+    "prose-ketchup-earlier",
+    "prose-poteto-uses",
+    "prose-poteto-matches",
+    "prose-kit-ships",
+    "prose-builtins",
+    "prose-orchestrate-playbook",
+    "prose-prose-follows",
+    "prose-authoring-skill",
+    "prose-before-review",
+    "prose-no-comments-pass",
+    "prose-defaults-spawn",
+    "prose-mode-benchmark",
+    "prose-setup-snippet",
+    "prose-setup-shape",
+    "prose-setup-detect",
+    "prose-agent-run",
+    "task-tool-backtick",
+    "task-tool-words",
+    "task-model",
+    "ask-question",
+    "ask-question-bare",
+    "model-config-path",
+    "model-config-rule",
+    "cursor-home-skills",
+    "cursor-home-plugins",
+    "cursor-home-projects",
+    "cursor-home",
+    "cursor-project",
+    "cursor-plugin-dir",
+    "cursor-automation-host",
+    "agent-transcripts",
+    "deslop-full",
+    "deslop-from-kit",
+    "deslop-command",
+    "deslop-name",
+    "create-skill-builtin",
+    "create-skill-name",
+    "create-skill-bare",
+    "kit-control-both",
+    "kit-control-ui",
+    "kit-control-cli",
+    "kit-provenance",
+    "kit-publishes",
+    "kit-name",
+    "env-cloud-run",
+    "env-cloud-field",
+    "env-cloud-standalone",
+    "env-local-field",
+    "cloud-base-branch",
+    "subagent-type-general",
+    "subagent-type-poteto",
+    "subagent-type-sicko",
+    "subagent-type-bare",
+    "poteto-agent-name",
+    "comment-sicko-name",
+    "readonly-field",
+    "run-in-background",
+    "slash-pstack-skill"
+  ]
+}
