@@ -2,17 +2,17 @@
   "generator": "tools/adapt.mjs",
   "adapter": "harness/dsh.md",
   "note": "Generated. Do not edit skills/ or agents/ by hand; run tools/adapt.mjs.",
-  "upstreamVersion": "0.15.36",
-  "upstreamDigest": "e728cbd35957b38289f3303f45647668d190e29c7a59f92a6d34766cfa566804",
+  "upstreamVersion": "0.15.42",
+  "upstreamDigest": "ec98b33e9e1dbbb4e45fcda3b0d0a197a60a8b92e295e98c0ae2e3202dfeb5b1",
   "skillCount": 58,
   "skills": [
     {
       "name": "architect",
-      "sha256": "dc5939eddb8730229e7f14d43727e3944d3978eb5019960881b67a686e1c48dd"
+      "sha256": "cb7d9dd2dfab15a4127da31cdb2cf9b4b560a022462b4d111eaad1ccb0cad050"
     },
     {
       "name": "arena",
-      "sha256": "82f83b6332f0471599598a349217c81874669f71c9be6b9f8a1e54d4a5e59740"
+      "sha256": "17a9a3fda6940174722d6f361d79d7f379463466c1e228ac425297d8fa643655"
     },
     {
       "name": "automate-me",
@@ -24,7 +24,7 @@
     },
     {
       "name": "blast-radius",
-      "sha256": "2e10745b97f5862323dcda3b29ca60d56b5c3c98e37020085d26b48efbe0a436"
+      "sha256": "4248d03e22365207d2e5f90c9542720f80a88a6b42fd542ef88dde3cf9f9223f"
     },
     {
       "name": "bro",
@@ -48,7 +48,7 @@
     },
     {
       "name": "how",
-      "sha256": "1e61dfa1a78a36e01f3f1a7cb80e6630c8eb203865bed9e5790def2515014010"
+      "sha256": "92ed8025c2e8183362b9d86c98bd8577cfb42496b2d2ba214c984b8aefc62723"
     },
     {
       "name": "in-your-own-words",
@@ -80,15 +80,15 @@
     },
     {
       "name": "no-comments",
-      "sha256": "b3a1b967dbee7fff455a6b6c65d97db930f6ec52546a3bd8098ed843402f53dd"
+      "sha256": "d363f56a9789d7ba64af08986451b64988d88ea56881b16e36e3d6670705e7ec"
     },
     {
       "name": "poteto-help",
-      "sha256": "4da452821bd763768fbc30157c2034b7e080cd4e79d8247ff0dcf34b37c6f340"
+      "sha256": "2f6c46efc899a7faabcb254f99189ca8eddfc408fb3170878a0b8aed283f1075"
     },
     {
       "name": "poteto-mode",
-      "sha256": "ac31f16830ac24248100b7f736f3c5749741bf61f990a73e729c61b4825672f9"
+      "sha256": "c007361e531d5c5235984d59b05ec0e1df78da411d8d585c20598a2bc260f548"
     },
     {
       "name": "principle-attack-the-premise",
@@ -188,19 +188,19 @@
     },
     {
       "name": "recall",
-      "sha256": "5dd7b4b48732d35619a941840ed9f5bff53dd5fc5f4714ca3c80dbb18813ce54"
+      "sha256": "0e5647bd6c69d4eb8e72c12bbf5d4c2c1b377dd6b6fea2ee97df00bac3bd7fe0"
     },
     {
       "name": "reflect",
-      "sha256": "6067b186b82d27a74c47538e00e3b93a9e07873430b5312c4a9a03f42b6bac02"
+      "sha256": "a48c79f4c7bc0577df4580d1a2e46aa3947941b4dea866a4841632f598aeb83c"
     },
     {
       "name": "setup-pstack",
-      "sha256": "523f4f318f9fdf82804bfc91a655f80e68b4cfc35d0d92f658d8ba22a304b6f7"
+      "sha256": "f5be3e966bf7602651ce6d0bb082002cbda17cd2960e84bf2fcaf40c480f20f4"
     },
     {
       "name": "sharpen",
-      "sha256": "563dfc460c605d311e650726288e2f1cbd61eab817db178d6e7e29643e07e7a2"
+      "sha256": "aac4f8e6a1ffd70e3763314db37d3c2eb0cfea08bc63e98907aca6dae0343031"
     },
     {
       "name": "show-me-your-work",
@@ -212,7 +212,7 @@
     },
     {
       "name": "swarm",
-      "sha256": "9c6d7ed24ec1a76a0b81d1531e05c509a4372e7d2ebbb46489d7ccd2dd80bcf1"
+      "sha256": "5a9c1bbbc001b909a05ea29c8a8d44465b753de307f69bdb45f22195869de47a"
     },
     {
       "name": "tdd",
@@ -220,7 +220,7 @@
     },
     {
       "name": "teach",
-      "sha256": "bd286e5a6290673be2cd28aef7af2ec7f1fb138e6bce156ea657368c7e7fc8a4"
+      "sha256": "2c17f3c0a79536ca2fa3c20983def027ffd8abb4063d9bb3c97778b77557600d"
     },
     {
       "name": "technical-writing",
@@ -236,7 +236,7 @@
     },
     {
       "name": "why",
-      "sha256": "3d7f66727dab6df54cbc4c6b618f1cf098c62b39ccc81bed8bef17ea5e83e14b"
+      "sha256": "6b65b3180f1f1bd3b696d7933daf900747410c82931d220a3f57a98addb1c0fd"
     }
   ],
   "ruleIds": [

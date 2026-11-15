@@ -13,6 +13,7 @@ a no-change run did append a row, which is why two rows share the same
 
 | Date (UTC) | Upstream version | Result |
 | --- | --- | --- |
+| 2026-11-15 | 0.15.42 | Synced `bf0c7cd` |
 | 2026-11-04 | 0.15.36 | No change |
 | 2026-11-04 | 0.15.36 | Synced `bb68f23` |
 | 2026-11-04 | 0.15.36 | Initial import from `bb68f23` |
