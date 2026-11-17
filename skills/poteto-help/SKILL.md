@@ -51,7 +51,7 @@ Other tools can read the skills, because they use the Agent Skills format. But m
 
 ## Start a task with the **poteto-mode** skill
 
-The **poteto-mode** skill matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A step it skips stays in the list as `skip: <reason>`. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.
+The **poteto-mode** skill matches the task to a playbook, copies the playbook's steps into the todo list, and runs the other skills as the steps need them. A good prompt states the goal and how to tell it's done. It doesn't list skills, because a hand-written sequence tends to drop or reorder steps the playbook would keep. Read [`references/prompting.md`](references/prompting.md) before you help word one. [Guide page 2](../../docs/guide/02-poteto-mode.md) has examples.
 
 Whether the **poteto-mode** skill stays on depends on how the user starts it:
 
@@ -108,16 +108,15 @@ Close calls:
 
 - the **how** skill explains what the code does. the **why** skill explains the reasons. `/teach` runs one or both and explains the result plainly.
 - the **arena** skill gives every worker the same brief and merges the best parts. the **swarm** skill splits work into slices or a race and returns one report.
-- the **architect** skill implements right after it settles the design. Add "with checkpoint" to review the design before it writes code.
 - the **interrogate** skill reviews the diff. `/blast-radius` looks for breakage outside the diff and proves the one fact that makes the change safe.
 - `/recall` rebuilds context across recent chats. the **ketchup** skill covers only this chat since the user's last message. Resuming one specific chat or branch is the Session pickup playbook.
-- the **figure-it-out** skill designs one rigorous run. The Orchestrate playbook runs a program that spans days and many PRs. The Autonomous run playbook drives one task to a finish condition.
+- the **figure-it-out** skill designs one rigorous run. The Autonomous run playbook drives one task to a finish condition.
 
 Not in pstack:
 
 - **unslop**, `control-cli`, and `control-ui` ship in the control-skill plugin.
 - `schedule_create` covers `/loop`; this repo's skill-authoring guidance covers skill scaffolding.
-- pstack has no `/orchestrate` skill. Orchestrate is a **poteto-mode** playbook. If the slash menu shows `/orchestrate`, another plugin provides it.
+- pstack has no `/orchestrate` skill. If the slash menu shows `/orchestrate`, another plugin provides it.
 
 ## Playbooks and principles
 
@@ -130,7 +129,7 @@ Playbooks are step lists inside the **poteto-mode** skill, not skills, so they h
 - "full autopilot on this queue" runs Autopilot-full. "autopilot, don't merge" runs Autopilot-stack.
 - "run the eval playbook" runs Eval.
 
-Without the **poteto-mode** skill, a phrase such as "babysit this pr" can start Cursor's own skill for the same job instead. The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook and when it applies. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
+Without the **poteto-mode** skill, a phrase such as "babysit this pr" can start Cursor's own skill for the same job instead. The Playbooks section of [`poteto-mode`](../poteto-mode/SKILL.md) lists every playbook. [Guide page 6](../../docs/guide/06-verify-and-ship.md) covers opening, babysitting, and landing a PR.
 
 pstack has no planning skill. Cursor's Plan Mode works alongside it. For work that spans phases or stacked PRs, asking the **poteto-mode** skill for a plan runs the [Multi-phase plan playbook](../poteto-mode/playbooks/multi-phase-plan.md), which writes the plan and doesn't implement it. For a design question, the Prototype playbook or the **architect** skill settles it in code first.
 
