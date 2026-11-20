@@ -2,8 +2,8 @@
   "generator": "tools/adapt.mjs",
   "adapter": "harness/dsh.md",
   "note": "Generated. Do not edit skills/ or agents/ by hand; run tools/adapt.mjs.",
-  "upstreamVersion": "0.15.44",
-  "upstreamDigest": "df84de186f58f47b1667dd9e2d9f627ef29f6de208465c8396d2081aa814d00c",
+  "upstreamVersion": "0.15.46",
+  "upstreamDigest": "f216f274a06d149bdff54331062130a5d86918e569f834388ddaa84d278ae143",
   "skillCount": 58,
   "skills": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "name": "arena",
-      "sha256": "d5b50033860644039407282cc4b334efbe7acbf9782fe925e99cd44e44bb020a"
+      "sha256": "c0c9d0ffa02c3df459248132321e7ceba3bfd3a8038205353b39d2a8f18a9e8a"
     },
     {
       "name": "automate-me",
@@ -88,7 +88,7 @@
     },
     {
       "name": "poteto-mode",
-      "sha256": "198692f66d3ed19dcb5c8358ce71ec317766b5a31093c23ff143036f16dcf91a"
+      "sha256": "2bc7dd54b69c40058f712ccb6fc393cf920b940ffc484f04a628d42f001683e7"
     },
     {
       "name": "principle-attack-the-premise",
@@ -196,7 +196,7 @@
     },
     {
       "name": "setup-pstack",
-      "sha256": "aa9698c8b0cf12fe5de3ea381a00ef961fe54dda2a8534ac63db80b324f1852e"
+      "sha256": "2e9a340c4c71f7b1083da1a6e8b266323c8c5950d1d732347132fc562081feca"
     },
     {
       "name": "sharpen",
@@ -208,7 +208,7 @@
     },
     {
       "name": "statechart",
-      "sha256": "010b7b4532406739b1c3a426d1a45f02bb618a42561fc96b3976e064a7f8384d"
+      "sha256": "ca7b3e43b1ddc4fb2425a33960f9390357323a869e1d921b6e2aff4f3004d55e"
     },
     {
       "name": "swarm",

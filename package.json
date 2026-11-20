@@ -1,6 +1,6 @@
 {
   "name": "pstack-dsh",
-  "version": "0.15.44",
+  "version": "0.15.46",
   "private": true,
   "license": "MIT",
   "type": "module",
